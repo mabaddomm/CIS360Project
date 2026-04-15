@@ -6,7 +6,7 @@
     }
  
     .stApp {
-        background-color: #0f0f11;
+        background-color: #252526;
         color: #e8e6e1;
     }
  
@@ -20,8 +20,9 @@
  
     /* Sidebar */
     [data-testid="stSidebar"] {
-        background-color: #111114;
-        border-right: 1px solid #1e1e24;
+        background-color: #252526;
+        /* background-color: #414142; */
+        border-right: 4px solid #e8e6e1;
         padding: 0;
     }
  
@@ -47,7 +48,7 @@
  
     .sidebar-section {
         font-size: 0.65rem;
-        color: #f9cc85;
+        color: #d8f9ff;
         letter-spacing: 0.12em;
         text-transform: uppercase;
         margin-bottom: 0.75rem;
@@ -104,8 +105,7 @@
     /* Main chat area */
     .chat-header {
         padding: 1.5rem 3rem 1rem;
-        border-bottom: 1px solid #1a1a20;
-        background: #0f0f11;
+        background: #252526;
         position: sticky;
         top: 0;
         z-index: 100;
@@ -114,7 +114,7 @@
     .chat-title {
         font-family: 'DM Serif Display', serif;
         font-size: 1.1rem;
-        color: #f9cc85;
+        color: #d8f9ff;
         margin: 0;
     }
  
@@ -293,14 +293,14 @@
     }
  
     /* Input area */
-    .input-area {
+    /* .input-area {
         position: fixed;
         bottom: 0;
         right: 0;
         padding: 1.25rem 3rem 1.5rem;
-        background: linear-gradient(to top, #0f0f11 85%, transparent);
-        z-index: 100;
-    }
+        /* background: linear-gradient(to top, #0101a1 85%, transparent); */
+        /* z-index: 100; */
+    /* } */
  
     .input-wrapper {
         max-width: 860px;
@@ -311,7 +311,7 @@
     /* Streamlit input override */
     .stTextInput input {
         background: #e8e6e1 !important;
-        border: 3px solid #36b642 !important;
+        border: 5px solid black !important;
         border-radius: 10px !important;
         color: black !important;
         font-family: 'DM Sans', sans-serif !important;
@@ -321,7 +321,7 @@
     }
  
     .stTextInput input:focus {
-        border-color: #c8a876 !important;
+        border-color: #f9cc85 !important;
         caret-color: black;
         /* box-shadow: 0 0 0 2px rgba(200, 168, 118, 0.1) !important; */
     }
@@ -332,8 +332,8 @@
  
     /* Button */
     .stButton button {
-        background: #d8f9ff !important;
-        color: #0f0f11 !important;
+        background: black !important;
+        color: #e8e6e1 !important;
         border: 4px solid #f9cc85 !important;
         /* border: 2px solid #a3a3bc !important; */
         /* border: none !important; */
@@ -346,7 +346,7 @@
     }
  
     .stButton button:hover {
-        background: #f9cc85 !important;
+        /* background: #f9cc85 !important; */
         border-color: #d8f9ff !important;
         transform: translateY(-1px) !important;
     }

@@ -153,9 +153,15 @@ with col_main:
     # Spacer for fixed input
     st.markdown("<div style='height: 120px'></div>", unsafe_allow_html=True)
  
-# --- Input area ---
-st.markdown('<div class="input-area" style="left: 21rem;">', unsafe_allow_html=True)
-st.markdown('<div class="input-wrapper">', unsafe_allow_html=True)
+# --- Input area (I don't get why Claude created this input area code, it seems like this
+# does nothing and all it did was create a bug where an out of place black box pops up at
+# the bottom of the page... Maybe there will be a reason to have this, who knows) ---
+
+# st.markdown('<div class="input-area" style="left: 21rem;">', unsafe_allow_html=True) 
+# commented above line out
+# st.markdown('<div class="input-wrapper">', unsafe_allow_html=True) 
+# commented this out
+
  
 col_input, col_btn = st.columns([6, 1])
  
@@ -177,7 +183,7 @@ with col_input:
 with col_btn:
     send = st.button("Search →", use_container_width=True)
  
-st.markdown('<div class="input-hint">Connected to MongoDB · ResearchLens v1.0</div>', unsafe_allow_html=True)
+# st.markdown('<div class="input-hint">Connected to MongoDB · ResearchLens v1.0</div>', unsafe_allow_html=True)
 st.markdown('</div></div>', unsafe_allow_html=True)
  
 # --- Handle input ---
