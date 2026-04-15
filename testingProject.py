@@ -92,21 +92,12 @@ with st.sidebar:
 col_main = st.columns([1])[0]
  
 with col_main:
-    # Header
-    st.markdown('''
-    <div class="chat-header">
-        <p class="chat-title">Knowledge Graph Search</p>
-        <p class="chat-subtitle">Ask anything about the papers, methods, datasets, or uncertainties in the database</p>
-    </div>
-    ''', unsafe_allow_html=True)
- 
     # Chat messages or welcome screen
     st.markdown('<div class="message-container">', unsafe_allow_html=True)
  
     if not st.session_state.messages:
         st.markdown('''
         <div class="welcome-container">
-            <div class="welcome-icon">🔬</div>
             <h1 class="welcome-title">ResearchLens AI</h1>
             <p class="welcome-subtitle">
                 Search through our scientific knowledge graph using natural language.
