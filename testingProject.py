@@ -2,11 +2,11 @@ import streamlit as st
 import time
 from pymongo import MongoClient
 
-client = MongoClient("mongodb://host.docker.internal:27017/")
+client = MongoClient("mongodb+srv://abaddomm:MaccustheCactus1565@cis360cluster.em4cpwv.mongodb.net/?appName=CIS360Cluster")
 db = client["CIS_360_Project"]
-datasets = db["Dataset"]
+datasets = db["Datasets"]
 papers = db["Papers"]
-methods = db["Fusion_Methods"]
+methods = db["FusionMethods"]
 
 
 # Page config
