@@ -10,8 +10,28 @@
         color: #e8e6e1;
     }
  
-    /* Hide default streamlit elements */
-    #MainMenu, footer, header {visibility: hidden;}
+    /* Hide Streamlit chrome we don't need; keep deploy menu hidden */
+    #MainMenu, footer {
+        visibility: hidden;
+    }
+
+    /* We don't use Streamlit's top toolbar in this UI. */
+    [data-testid="stHeader"] {
+        visibility: hidden !important;
+        height: 0 !important;
+        min-height: 0 !important;
+        overflow: hidden !important;
+        pointer-events: none !important;
+    }
+
+    @media (min-width: 992px) {
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"],
+        button[aria-label="Collapse sidebar"] {
+            display: none !important;
+        }
+    }
+
     .block-container {
         padding-top: 0rem;
         padding-bottom: 0rem;
@@ -25,6 +45,51 @@
         border-right: 4px solid #e8e6e1;
         padding: 0;
     }
+
+    /* Mobile/tablet: sidebar content is merged into the main column. */
+    .mobile-sidebar-panels {
+        display: none !important;
+    }
+
+    @media (max-width: 991px) {
+        [data-testid="stSidebar"] {
+            display: none !important;
+        }
+
+        .mobile-sidebar-panels {
+            display: block !important;
+        }
+    }
+
+    /* Desktop: sidebar is the single source of truth (no duplicated panels). */
+    @media (min-width: 992px) {
+        .mobile-sidebar-panels {
+            display: none !important;
+        }
+    }
+
+    /*
+     * Remove drag-to-resize sidebar.
+     *
+     * Streamlit renders the sidebar as a `re-resizable` container and injects
+     * an 8px right-edge drag handle as extra direct children of the sidebar.
+     * Keep only the actual content wrapper.
+     */
+    [data-testid="stSidebar"] > div:not([data-testid="stSidebarContent"]) {
+        display: none !important;
+        pointer-events: none !important;
+        width: 0 !important;
+        min-width: 0 !important;
+        opacity: 0 !important;
+    }
+
+    /* Also neutralize the resizable handle if it slips through. */
+    [data-testid="stSidebar"] .stSidebar,
+    [data-testid="stSidebar"] [style*="col-resize"],
+    [data-testid="stSidebar"] [style*="cursor: col-resize"] {
+        cursor: default !important;
+        pointer-events: none !important;
+    }
  
     [data-testid="stSidebar"] .block-container {
         padding: 2rem 1.25rem;
@@ -32,7 +97,7 @@
  
     .sidebar-logo {
         font-family: 'DM Serif Display', serif;
-        font-size: 1.5rem;
+        font-size: clamp(1.2rem, 2.5vw, 1.5rem);
         color: #d8f9ff;
         letter-spacing: -0.02em;
         margin-bottom: 0.25rem;
@@ -75,6 +140,35 @@
         color: #c8c6c0;
         border-color: #2e2e3a;
     }
+
+    /* Use existing "button" styling for suggestion links too. */
+    .suggestion-link {
+        display: block;
+        text-decoration: none;
+    }
+
+    .suggestion-link:visited {
+        color: #8a8a99;
+    }
+
+    /* Mobile inline panels layout */
+    .mobile-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    @media (max-width: 420px) {
+        .mobile-stats-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .uncertainty-legend {
+        font-size: 0.78rem;
+        color: #e8e6e1;
+        line-height: 1.8;
+    }
  
     .stat-card {
         background: #36b642;
@@ -87,7 +181,7 @@
  
     .stat-number {
         font-family: 'DM Serif Display', serif;
-        font-size: 1.5rem;
+        font-size: clamp(1.2rem, 3.5vw, 1.5rem);
         color: #d8f9ff;
         /* color: #a3a3bc; */
         /* color: rgb(12, 158, 14); */
@@ -104,7 +198,7 @@
  
     /* Main chat area */
     .chat-header {
-        padding: 1.5rem 3rem 1rem;
+        padding: clamp(0.85rem, 2.5vw, 1.5rem) clamp(1rem, 4vw, 3rem) clamp(0.65rem, 1.5vw, 1rem);
         background: #252526;
         position: sticky;
         top: 0;
@@ -113,7 +207,7 @@
  
     .chat-title {
         font-family: 'DM Serif Display', serif;
-        font-size: 1.1rem;
+        font-size: clamp(1rem, 2.2vw, 1.1rem);
         color: #d8f9ff;
         margin: 0;
     }
@@ -126,8 +220,8 @@
  
     /* Messages */
     .message-container {
-        padding: 1.5rem 3rem;
-        max-width: 860px;
+        padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 3rem);
+        max-width: min(860px, 100%);
         margin: 0 auto;
     }
  
@@ -142,7 +236,7 @@
         border: 1px solid #253545;
         border-radius: 18px 18px 4px 18px;
         padding: 0.85rem 1.2rem;
-        max-width: 70%;
+        max-width: min(70%, 100%);
         font-size: 0.9rem;
         color: #c8d8e8;
         line-height: 1.6;
@@ -174,7 +268,7 @@
         border: 1px solid #1e1e26;
         border-radius: 4px 18px 18px 18px;
         padding: 0.85rem 1.2rem;
-        max-width: 75%;
+        max-width: min(75%, 100%);
         font-size: 0.9rem;
         color: #c8c6c0;
         line-height: 1.7;
@@ -231,27 +325,26 @@
     /* Welcome screen */
     .welcome-container {
         text-align: center;
-        padding: 4rem 2rem;
-        max-width: 600px;
+        padding: clamp(2rem, 8vw, 4rem) clamp(1rem, 4vw, 2rem);
+        max-width: min(600px, 100%);
         margin: 0 auto;
     }
  
     .welcome-icon {
-        font-size: 3rem;
+        font-size: clamp(2rem, 8vw, 3rem);
         margin-bottom: 1rem;
     }
  
     .welcome-container .welcome-title {
         font-family: 'DM Serif Display', serif;
-        /* font-size: 2rem; */
-        /* color: #e8e6e1; */
+        font-size: clamp(1.5rem, 5vw, 2rem);
         color: #d8f9ff;
         margin-bottom: 0.5rem;
         letter-spacing: -0.02em;
     }
  
     .welcome-subtitle {
-        font-size: 0.9rem;
+        font-size: clamp(0.82rem, 2.4vw, 0.9rem);
         color: #e8e6e1;
         line-height: 1.6;
         margin-bottom: 2.5rem;
@@ -259,7 +352,7 @@
  
     .example-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
         gap: 0.75rem;
         text-align: left;
     }
@@ -293,17 +386,15 @@
     }
  
     /* Input area */
-    /* .input-area {
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        padding: 1.25rem 3rem 1.5rem;
-        /* background: linear-gradient(to top, #0101a1 85%, transparent); */
-        /* z-index: 100; */
-    /* } */
+    .input-area {
+        max-width: min(860px, 100%);
+        margin: 0 auto;
+        padding: 0 clamp(0, 4vw, 1rem) 1rem;
+        position: relative;
+    }
  
     .input-wrapper {
-        max-width: 860px;
+        max-width: min(860px, 100%);
         margin: 0 auto;
         position: relative;
     }
@@ -315,9 +406,9 @@
         border-radius: 10px !important;
         color: black !important;
         font-family: 'DM Sans', sans-serif !important;
-        font-size: 0.9rem !important;
-        padding: 0.85rem 1.2rem !important;
-        padding-right: 3rem !important;
+        font-size: clamp(0.82rem, 2.2vw, 0.9rem) !important;
+        padding: clamp(0.65rem, 2vw, 0.85rem) clamp(0.85rem, 3vw, 1.2rem) !important;
+        padding-right: clamp(2.25rem, 8vw, 3rem) !important;
     }
  
     .stTextInput input:focus {
@@ -340,8 +431,8 @@
         border-radius: 10px !important;
         font-family: 'DM Sans', sans-serif !important;
         font-weight: 500 !important;
-        font-size: 0.85rem !important;
-        padding: 0.6rem 1.5rem !important;
+        font-size: clamp(0.78rem, 2vw, 0.85rem) !important;
+        padding: clamp(0.5rem, 1.5vw, 0.6rem) clamp(1rem, 3vw, 1.5rem) !important;
         transition: all 0.2s !important;
     }
  

@@ -1,5 +1,11 @@
+import html
+from pathlib import Path
+
 import streamlit as st
-import time
+import streamlit.components.v1 as components
+
+# Must match styles.css sidebar / header media query
+_DESKTOP_MIN_WIDTH_PX = 992
  
 # Page config
 st.set_page_config(
@@ -9,18 +15,131 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
  
-# Custom CSS
+# Custom CSS (resolve next to this file so it loads regardless of cwd)
 def load_css(file_name):
-    with open(file_name) as f:
+    path = Path(__file__).resolve().parent / file_name
+    with open(path, encoding="utf-8") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 load_css("styles.css")
- 
+
+
+def inject_sidebar_viewport_bridge():
+    """
+    Desktop: clear Streamlit's persisted stSidebarCollapsed-* flag and click the native
+    expand control if needed so the sidebar cannot stay 'stuck' closed across refreshes.
+
+    Tablet/phone: leave Streamlit's header + collapse behavior alone so the top bar
+    can open or close the sidebar.
+    """
+    px = _DESKTOP_MIN_WIDTH_PX
+    components.html(
+        f"""
+<script>
+(function () {{
+  var root = window.parent;
+  var doc = root.document;
+  var mq = root.matchMedia("(min-width: {px}px)");
+
+  function clearCollapsedPref() {{
+    try {{
+      var ls = root.localStorage;
+      for (var i = ls.length - 1; i >= 0; i--) {{
+        var k = ls.key(i);
+        if (k && k.indexOf("stSidebarCollapsed-") === 0) {{
+          ls.removeItem(k);
+        }}
+      }}
+    }} catch (e) {{}}
+  }}
+
+  function clearSidebarWidthPref() {{
+    try {{
+      root.localStorage.removeItem("sidebarWidth");
+    }} catch (e) {{}}
+  }}
+
+  function stripResizeHandles() {{
+    var side = doc.querySelector('[data-testid="stSidebar"]');
+    if (!side) return;
+    for (var i = 0; i < side.children.length; i++) {{
+      var ch = side.children[i];
+      if (ch.getAttribute("data-testid") === "stSidebarContent") continue;
+      ch.style.setProperty("display", "none", "important");
+      ch.style.setProperty("pointer-events", "none", "important");
+      ch.style.setProperty("width", "0", "important");
+      ch.style.setProperty("min-width", "0", "important");
+      ch.style.setProperty("opacity", "0", "important");
+    }}
+  }}
+
+  function watchSidebarForHandles() {{
+    var side = doc.querySelector('[data-testid="stSidebar"]');
+    if (!side || side.__researchLensHandleObserver) return;
+    side.__researchLensHandleObserver = true;
+    var obs = new MutationObserver(stripResizeHandles);
+    obs.observe(side, {{ childList: true }});
+  }}
+
+  function tryClickExpand() {{
+    var btn =
+      doc.querySelector('button[aria-label="Expand sidebar"]') ||
+      doc.querySelector('[data-testid="stSidebarCollapsedControl"] button') ||
+      doc.querySelector('[data-testid="collapsedControl"] button');
+    if (btn) {{
+      btn.click();
+    }}
+  }}
+
+  function syncDesktopSidebar() {{
+    if (!mq.matches) return;
+    clearCollapsedPref();
+    tryClickExpand();
+  }}
+
+  function syncAll() {{
+    clearSidebarWidthPref();
+    stripResizeHandles();
+    watchSidebarForHandles();
+    syncDesktopSidebar();
+  }}
+
+  function init() {{
+    if (!root.__researchLensSidebarBridge) {{
+      root.__researchLensSidebarBridge = true;
+      root.addEventListener("resize", syncAll);
+    }}
+    syncAll();
+    setTimeout(syncAll, 60);
+    setTimeout(syncAll, 300);
+  }}
+
+  init();
+}})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
+
 # Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "input_key" not in st.session_state:
     st.session_state.input_key = 0
+
+# Allow mobile "Try Asking" links to prefill the input.
+try:
+    suggested = st.query_params.get("suggest")
+except Exception:
+    suggested = None
+if suggested:
+    st.session_state.pending_query = suggested
+    try:
+        del st.query_params["suggest"]
+    except Exception:
+        pass
  
 # --- Sidebar ---
 with st.sidebar:
@@ -92,9 +211,21 @@ with st.sidebar:
 col_main = st.columns([1])[0]
  
 with col_main:
+    # Sticky header only during chat (welcome screen already has the hero title)
+    if st.session_state.messages:
+        st.markdown(
+            """
+            <div class="chat-header">
+                <h2 class="chat-title">ResearchLens AI</h2>
+                <p class="chat-subtitle">Scientific knowledge graph search</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
     # Chat messages or welcome screen
     st.markdown('<div class="message-container">', unsafe_allow_html=True)
- 
+
     if not st.session_state.messages:
         st.markdown('''
         <div class="welcome-container">
@@ -123,12 +254,58 @@ with col_main:
             </div>
         </div>
         ''', unsafe_allow_html=True)
+
+        # Mobile/tablet: render "sidebar" content inline as a single HTML block
+        # so it can be cleanly hidden on desktop with CSS (no duplication).
+        mobile_links = "\n".join(
+            f'<a class="suggestion-btn suggestion-link" href="?suggest={html.escape(s, quote=True)}">{html.escape(s)}</a>'
+            for s in suggestions
+        )
+        st.markdown(
+            f"""
+            <div class="mobile-sidebar-panels">
+              <div class="sidebar-section">Database Stats</div>
+              <div class="mobile-stats-grid">
+                <div class="stat-card">
+                  <div class="stat-number">5</div>
+                  <div class="stat-label">Papers</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">5</div>
+                  <div class="stat-label">Methods</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">12</div>
+                  <div class="stat-label">Datasets</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-number">3</div>
+                  <div class="stat-label">U-Types</div>
+                </div>
+              </div>
+
+              <div class="sidebar-section">Uncertainty Types</div>
+              <div class="uncertainty-legend">
+                <span class="uncertainty-tag u1-tag">U1</span> Conception<br>
+                <span class="uncertainty-tag u2-tag">U2</span> Measurement<br>
+                <span class="uncertainty-tag u3-tag">U3</span> Analysis
+              </div>
+
+              <div class="sidebar-section">Try Asking</div>
+              <div class="mobile-suggestions">
+                {mobile_links}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
     else:
         for msg in st.session_state.messages:
             if msg["role"] == "user":
+                safe = html.escape(msg["content"])
                 st.markdown(f'''
                 <div class="user-message">
-                    <div class="user-bubble">{msg["content"]}</div>
+                    <div class="user-bubble">{safe}</div>
                 </div>
                 ''', unsafe_allow_html=True)
             else:
@@ -140,44 +317,28 @@ with col_main:
                 ''', unsafe_allow_html=True)
  
     st.markdown('</div>', unsafe_allow_html=True)
- 
-    # Spacer for fixed input
-    st.markdown("<div style='height: 120px'></div>", unsafe_allow_html=True)
- 
-# --- Input area (I don't get why Claude created this input area code, it seems like this
-# does nothing and all it did was create a bug where an out of place black box pops up at
-# the bottom of the page... Maybe there will be a reason to have this, who knows) ---
 
-# st.markdown('<div class="input-area" style="left: 21rem;">', unsafe_allow_html=True) 
-# commented above line out
-# st.markdown('<div class="input-wrapper">', unsafe_allow_html=True) 
-# commented this out
-
- 
-col_input, col_btn = st.columns([6, 1])
- 
-with col_input:
-    # Check for pending query from sidebar
+    # Form: Enter submits; avoids treating any non-empty input as "send" on unrelated reruns
     default_val = ""
     if "pending_query" in st.session_state:
         default_val = st.session_state.pending_query
         del st.session_state.pending_query
- 
-    user_input = st.text_input(
-        "query",
-        value=default_val,
-        placeholder="Ask about papers, methods, datasets, or uncertainties...",
-        label_visibility="collapsed",
-        key=f"input_{st.session_state.input_key}"
-    )
- 
-with col_btn:
-    send = st.button("Search →", use_container_width=True)
+        st.session_state.input_key += 1
+
+    with st.form("search_form", clear_on_submit=True):
+        col_input, col_btn = st.columns([6, 1])
+        with col_input:
+            user_input = st.text_input(
+                "query",
+                value=default_val,
+                placeholder="Ask about papers, methods, datasets, or uncertainties...",
+                label_visibility="collapsed",
+                key=f"input_{st.session_state.input_key}",
+            )
+        with col_btn:
+            send = st.form_submit_button("Search →", use_container_width=True)
  
 # st.markdown('<div class="input-hint">Connected to MongoDB · ResearchLens v1.0</div>', unsafe_allow_html=True)
-st.markdown('</div></div>', unsafe_allow_html=True)
- 
-# --- Handle input ---
 def generate_placeholder_response(query):
     """
     Placeholder response function.
@@ -249,8 +410,9 @@ def generate_placeholder_response(query):
         </div>
         """
     else:
+        safe_q = html.escape(query)
         return f"""
-        I searched the knowledge graph for <em>"{query}"</em>.<br><br>
+        I searched the knowledge graph for <em>"{safe_q}"</em>.<br><br>
         The database currently contains <strong>5 papers</strong>, <strong>5 methods</strong>, 
         and <strong>12 datasets</strong> related to data fusion research.<br><br>
         Try asking about:
@@ -264,8 +426,11 @@ def generate_placeholder_response(query):
             Note: Full MongoDB search will be connected soon.
         </em>
         """
- 
-if (send or user_input) and user_input.strip():
+
+
+inject_sidebar_viewport_bridge()
+
+if send and user_input.strip():
     st.session_state.messages.append({"role": "user", "content": user_input.strip()})
     response = generate_placeholder_response(user_input.strip())
     st.session_state.messages.append({"role": "assistant", "content": response})
