@@ -2,7 +2,12 @@ import streamlit as st
 import time
 from pymongo import MongoClient
 
-client = MongoClient("mongodb+srv://abaddomm:MaccustheCactus1565@cis360cluster.em4cpwv.mongodb.net/?appName=CIS360Cluster")
+import os
+from dotenv import load_dotenv
+
+load_dotenv("security.env")
+
+client = MongoClient(os.getenv("MONGODB_URI"))
 db = client["CIS_360_Project"]
 datasets = db["Datasets"]
 papers = db["Papers"]
