@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import SearchBox from "./components/SearchBox";
-import AnswerCard from "./components/AnswerCard";
-import EvidencePanel from "./components/EvidencePanel";
-import ExampleQueries from "./components/ExampleQueries";
+import SearchBox from "../components/SearchBox";
+import AnswerCard from "../components/AnswerCard";
+import EvidencePanel from "../components/EvidencePanel";
+import ExampleQueries from "../components/ExampleQueries";
 import { askAgent } from "./services/api";
 
 export default function App() {
@@ -11,6 +11,7 @@ export default function App() {
   const [toolUsed, setToolUsed] = useState("");
   const [rawData, setRawData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showThinking, setShowThinking] = useState(false);
   const [error, setError] = useState("");
 
   const handleAsk = async () => {
@@ -20,6 +21,7 @@ export default function App() {
     }
 
     setLoading(true);
+    setShowThinking(true);
     setError("");
     setAnswer("");
     setToolUsed("");
@@ -27,6 +29,9 @@ export default function App() {
 
     try {
       const result = await askAgent(query);
+
+      await new Promise((r) => setTimeout(r, 800));
+
       setAnswer(result.answer || "No answer returned.");
       setToolUsed(result.tool_used || "");
       setRawData(result.raw_data || result.evidence || null);
@@ -34,6 +39,10 @@ export default function App() {
       setError(err.message || "Something went wrong.");
     } finally {
       setLoading(false);
+
+      setTimeout(() => {
+        setShowThinking(false);
+      }, 300);
     }
   };
 
@@ -54,6 +63,13 @@ export default function App() {
       <ExampleQueries setQuery={setQuery} />
 
       {error && <div className="error-box">{error}</div>}
+
+      {showThinking && (
+        <div className={`thinking-box ${loading ? "fade-in" : "fade-out"}`}>
+          <span className="spinner"></span>
+          <p>⏳ Model is thinking... working hard on your query...</p>
+        </div>
+      )}
 
       {answer && <AnswerCard answer={answer} toolUsed={toolUsed} />}
 

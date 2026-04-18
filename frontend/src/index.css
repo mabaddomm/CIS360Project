@@ -84,3 +84,39 @@ h1 {
   padding: 12px;
   border-radius: 8px;
 }
+
+
+.thinking-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #eef3ff;
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.fade-in {
+  opacity: 1;
+}
+
+.fade-out {
+  opacity: 0;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 3px solid #ccc;
+  border-top: 3px solid #4a6cf7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
