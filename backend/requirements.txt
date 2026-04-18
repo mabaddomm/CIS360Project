@@ -1,0 +1,4 @@
+flask-cors==6.0.2
+openai==2.32.0
+pymongo==4.16.0
+python-dotenv==1.2.1
