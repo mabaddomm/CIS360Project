@@ -318,7 +318,7 @@ with col_main:
  
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Form: Enter submits; avoids treating any non-empty input as "send" on unrelated reruns
+    # Form: submit via button (textarea uses Enter for new lines).
     default_val = ""
     if "pending_query" in st.session_state:
         default_val = st.session_state.pending_query
@@ -328,12 +328,13 @@ with col_main:
     with st.form("search_form", clear_on_submit=True):
         col_input, col_btn = st.columns([6, 1])
         with col_input:
-            user_input = st.text_input(
+            user_input = st.text_area(
                 "query",
                 value=default_val,
                 placeholder="Ask about papers, methods, datasets, or uncertainties...",
                 label_visibility="collapsed",
                 key=f"input_{st.session_state.input_key}",
+                height=26,
             )
         with col_btn:
             send = st.form_submit_button("Search →", use_container_width=True)

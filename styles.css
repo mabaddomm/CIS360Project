@@ -336,6 +336,9 @@
     }
  
     .welcome-container .welcome-title {
+        /* display: flex;
+        justify-content: center; */
+        /* margin-left: 0 !important; */
         font-family: 'DM Serif Display', serif;
         font-size: clamp(1.5rem, 5vw, 2rem);
         color: #d8f9ff;
@@ -398,6 +401,27 @@
         margin: 0 auto;
         position: relative;
     }
+
+    [data-testid="stMain"] [data-testid="stForm"] {
+        border: none;
+        /* width: calc(85.7143% - 1rem); */
+    }
+
+    [data-testid="stMain"] [data-testid="stHorizontalBlock"] {
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+    }
+
+    [data-testid="stTextInputRootElement"],
+    [data-testid="stTextAreaRootElement"] {
+        border: unset !important;
+    }
+
+    [data-testid="InputInstructions"] {
+        display: none !important;
+    }
  
     /* Streamlit input override */
     .stTextInput input {
@@ -406,12 +430,30 @@
         border-radius: 10px !important;
         color: black !important;
         font-family: 'DM Sans', sans-serif !important;
+        /* font-size: clamp(0.82rem, 1.8vw, 0.9rem) !important; */
         font-size: clamp(0.82rem, 2.2vw, 0.9rem) !important;
-        padding: clamp(0.65rem, 2vw, 0.85rem) clamp(0.85rem, 3vw, 1.2rem) !important;
-        padding-right: clamp(2.25rem, 8vw, 3rem) !important;
+        width: clamp(500px, 33.47vw, 9999px);
+        /* width: 535px; */
+        /* padding: clamp(0.65rem, 2vw, 0.85rem) clamp(0.85rem, 3vw, 1.2rem) !important; */
+        /* padding-right: clamp(2.25rem, 8vw, 3rem) !important; */
+    }
+
+    @media (max-width: 640px) {
+        [data-testid="stForm"] [data-testid="stColumn"].stColumn.stColumn.st-emotion-cache-13a87qy {
+            /* width: inherit !important; */
+            width: calc(85.7143% - 1rem) !important;
+            min-width: auto;
+        }
+
+        [data-testid="stForm"] [data-testid="stColumn"].stColumn.st-emotion-cache-1km8org {
+            min-width: auto;
+        }
     }
  
     .stTextInput input:focus {
+        /* all: unset !important; */
+        /* border: unset !important; */
+        /* outline: none; */
         border-color: #f9cc85 !important;
         caret-color: black;
         /* box-shadow: 0 0 0 2px rgba(200, 168, 118, 0.1) !important; */
@@ -419,6 +461,37 @@
  
     .stTextInput input::placeholder {
         color: black !important;
+    }
+
+    /* Multi-line query field (matches .stTextInput styling) */
+    .stTextArea textarea {
+        /* all: unset; */
+        background: #e8e6e1 !important;
+        border: 5px solid black !important;
+        border-radius: 10px !important;
+        color: black !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-size: clamp(0.82rem, 2.2vw, 0.9rem) !important;
+        width: clamp(500px, 33.47vw, 9999px);
+        line-height: 1.45 !important;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        resize: none;
+        min-height: 2.8rem;
+    }
+
+    .stTextArea textarea:focus {
+        border-color: #f9cc85 !important;
+        caret-color: black;
+    }
+
+    .stTextArea textarea::placeholder {
+        color: black !important;
+    }
+
+    [data-testid="stForm"] 
+    [data-testid="stColumn"].stColumn.stColumn.st-emotion-cache-13a87qy.e1rw0b1u2 {
+        width: auto;
     }
  
     /* Button */
@@ -440,6 +513,20 @@
         /* background: #f9cc85 !important; */
         border-color: #d8f9ff !important;
         transform: translateY(-1px) !important;
+    }
+
+    [data-testid="stForm"] [data-testid="stColumn"].stColumn.st-emotion-cache-1km8org {
+        width: auto;
+    }
+
+    .stFormSubmitButton button {
+        /* all: unset; */
+        background: black !important;
+        color: #e8e6e1 !important;
+        border: 4px solid #f9cc85 !important;
+        border-radius: 10px !important;
+        /* width: none; */
+        /* width: 112px !important; */
     }
  
     /* Divider */
