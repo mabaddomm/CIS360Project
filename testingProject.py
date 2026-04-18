@@ -6,6 +6,8 @@ import streamlit.components.v1 as components
 
 # Must match styles.css sidebar / header media query
 _DESKTOP_MIN_WIDTH_PX = 992
+# Query box auto-grow (see inject_query_textarea_autogrow)
+_QUERY_TEXTAREA_MAX_LINES = 10
  
 # Page config
 st.set_page_config(
@@ -123,6 +125,107 @@ def inject_sidebar_viewport_bridge():
     )
 
 
+def inject_query_textarea_autogrow(max_lines: int = _QUERY_TEXTAREA_MAX_LINES) -> None:
+    """
+    Grow the main search textarea with content up to max_lines, then show a scrollbar.
+    Streamlit keeps a fixed inline height on st.text_area; this overrides it on the client.
+    """
+    components.html(
+        f"""
+<script>
+(function () {{
+  var root = window.parent;
+  var doc = root.document;
+  var MAX = {int(max_lines)};
+
+  function extras(el) {{
+    var s = root.getComputedStyle(el);
+    return (parseFloat(s.paddingTop) || 0) + (parseFloat(s.paddingBottom) || 0) +
+      (parseFloat(s.borderTopWidth) || 0) + (parseFloat(s.borderBottomWidth) || 0);
+  }}
+
+  function lineH(el) {{
+    var s = root.getComputedStyle(el);
+    var lh = s.lineHeight;
+    if (lh === "normal") {{
+      var fs = parseFloat(s.fontSize) || 16;
+      return fs * 1.45;
+    }}
+    return parseFloat(lh) || 20;
+  }}
+
+  function fit(el) {{
+    if (!el || el.tagName !== "TEXTAREA") return;
+    var lh = lineH(el);
+    var maxPx = lh * MAX + extras(el);
+    el.style.overflowY = "hidden";
+    el.style.height = "1px";
+    var sh = el.scrollHeight;
+    var one = lh + extras(el);
+    var next = Math.max(one, Math.min(sh, maxPx));
+    el.style.height = next + "px";
+    el.style.overflowY = sh > maxPx ? "auto" : "hidden";
+  }}
+
+  function findTa() {{
+    var ta =
+      doc.querySelector('[data-testid="stMain"] form[data-testid="stForm"] .stTextArea textarea') ||
+      doc.querySelector('[data-testid="stMain"] .stTextArea textarea') ||
+      doc.querySelector('section.main form[data-testid="stForm"] .stTextArea textarea') ||
+      doc.querySelector("section.main .stTextArea textarea");
+    if (ta) return ta;
+    var all = doc.querySelectorAll(".stTextArea textarea");
+    for (var i = 0; i < all.length; i++) {{
+      if (!all[i].closest('[data-testid="stSidebar"]')) return all[i];
+    }}
+    return null;
+  }}
+
+  function wire(el) {{
+    if (!el || el.__researchLensAutoGrow) return;
+    el.__researchLensAutoGrow = true;
+    function refit() {{
+      root.requestAnimationFrame(function () {{ fit(el); }});
+    }}
+    ["input", "change", "cut", "paste"].forEach(function (ev) {{
+      el.addEventListener(ev, refit);
+    }});
+  }}
+
+  function sync() {{
+    var el = findTa();
+    if (!el) return;
+    wire(el);
+    fit(el);
+  }}
+
+  function scheduleSync() {{
+    clearTimeout(root.__researchLensTaGrowDebounce);
+    root.__researchLensTaGrowDebounce = root.setTimeout(sync, 50);
+  }}
+
+  if (!root.__researchLensTextAreaGrowInit) {{
+    root.__researchLensTextAreaGrowInit = true;
+    var main =
+      doc.querySelector('[data-testid="stMain"]') ||
+      doc.querySelector("section.main") ||
+      doc.body;
+    var mo = new MutationObserver(scheduleSync);
+    mo.observe(main, {{ childList: true, subtree: true }});
+    root.addEventListener("resize", function () {{ sync(); }});
+  }}
+  sync();
+  root.setTimeout(sync, 50);
+  root.setTimeout(sync, 200);
+  root.setTimeout(sync, 600);
+}})();
+</script>
+""",
+        height=0,
+        width=0,
+    )
+
+
 # Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -195,7 +298,7 @@ with st.sidebar:
     # Uncertainty legend
     st.markdown('<div class="sidebar-section">Uncertainty Types</div>', unsafe_allow_html=True)
     st.markdown('''
-    <div style="font-size:0.78rem; color:#e8e6e1; line-height:1.8;">
+    <div style="font-size:0.98rem; color:#e8e6e1; line-height:1.8;">
         <span class="uncertainty-tag u1-tag">U1</span> Conception<br>
         <span class="uncertainty-tag u2-tag">U2</span> Measurement<br>
         <span class="uncertainty-tag u3-tag">U3</span> Analysis
@@ -213,15 +316,7 @@ col_main = st.columns([1])[0]
 with col_main:
     # Sticky header only during chat (welcome screen already has the hero title)
     if st.session_state.messages:
-        st.markdown(
-            """
-            <div class="chat-header">
-                <h2 class="chat-title">ResearchLens AI</h2>
-                <p class="chat-subtitle">Scientific knowledge graph search</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        pass
 
     # Chat messages or welcome screen
     st.markdown('<div class="message-container">', unsafe_allow_html=True)
@@ -263,42 +358,50 @@ with col_main:
         )
         st.markdown(
             f"""
-            <div class="mobile-sidebar-panels">
-              <div class="sidebar-section">Database Stats</div>
-              <div class="mobile-stats-grid">
-                <div class="stat-card">
-                  <div class="stat-number">5</div>
-                  <div class="stat-label">Papers</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">5</div>
-                  <div class="stat-label">Methods</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">12</div>
-                  <div class="stat-label">Datasets</div>
-                </div>
-                <div class="stat-card">
-                  <div class="stat-number">3</div>
-                  <div class="stat-label">U-Types</div>
-                </div>
-              </div>
+<div class="mobile-sidebar-panels">
+  <div class="sidebar-section">Database Stats</div>
+  <div class="mobile-stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Papers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">5</div>
+      <div class="stat-label">Methods</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">12</div>
+      <div class="stat-label">Datasets</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">3</div>
+      <div class="stat-label">U-Types</div>
+    </div>
+  </div>
 
-              <div class="sidebar-section">Uncertainty Types</div>
-              <div class="uncertainty-legend">
-                <span class="uncertainty-tag u1-tag">U1</span> Conception<br>
-                <span class="uncertainty-tag u2-tag">U2</span> Measurement<br>
-                <span class="uncertainty-tag u3-tag">U3</span> Analysis
-              </div>
+  <div class="sidebar-section">Uncertainty Types</div>
+  <div class="uncertainty-legend">
+    <span class="uncertainty-tag u1-tag">U1</span> Conception<br>
+    <span class="uncertainty-tag u2-tag">U2</span> Measurement<br>
+    <span class="uncertainty-tag u3-tag">U3</span> Analysis
+  </div>
 
-              <div class="sidebar-section">Try Asking</div>
-              <div class="mobile-suggestions">
-                {mobile_links}
-              </div>
-            </div>
-            """,
+  <div class="sidebar-section">Try Asking</div>
+<!--   <div class="mobile-suggestions">
+     {mobile_links}
+   </div>  -->
+</div>
+""",
             unsafe_allow_html=True,
         )
+
+        # st.markdown('<div class="mobile-sidebar-panels">', unsafe_allow_html=True)
+
+        for s in suggestions:
+            if st.button(s, key=f"sugg_{s}", use_container_width=True):
+                st.session_state.pending_query = s
+
+        # st.markdown('</div>', unsafe_allow_html=True)
     else:
         for msg in st.session_state.messages:
             if msg["role"] == "user":
@@ -331,10 +434,10 @@ with col_main:
             user_input = st.text_area(
                 "query",
                 value=default_val,
-                placeholder="Ask about papers, methods, datasets, or uncertainties...",
+                placeholder="Ask about papers, methods, etc...",
                 label_visibility="collapsed",
                 key=f"input_{st.session_state.input_key}",
-                height=26,
+                height=38,
             )
         with col_btn:
             send = st.form_submit_button("Search →", use_container_width=True)
@@ -417,7 +520,7 @@ def generate_placeholder_response(query):
         The database currently contains <strong>5 papers</strong>, <strong>5 methods</strong>, 
         and <strong>12 datasets</strong> related to data fusion research.<br><br>
         Try asking about:
-        <ul style="margin-top:0.5rem; color:#8a8a99;">
+        <ul style="margin-top:0.5rem;>
             <li>Specific uncertainty types (U1, U2, U3)</li>
             <li>Fusion methods or techniques</li>
             <li>Datasets used in the papers</li>
@@ -430,6 +533,7 @@ def generate_placeholder_response(query):
 
 
 inject_sidebar_viewport_bridge()
+inject_query_textarea_autogrow()
 
 if send and user_input.strip():
     st.session_state.messages.append({"role": "user", "content": user_input.strip()})

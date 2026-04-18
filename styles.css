@@ -66,6 +66,15 @@
         .mobile-sidebar-panels {
             display: none !important;
         }
+
+        [data-testid="stMain"] .stButton button {
+            display: none !important;
+        }
+
+        [data-testid="stMain"] [data-testid="stVerticalBlock"].stVerticalBlock.st-emotion-cache-wfksaw.e1rw0b1u3 {
+            display: block !important;
+        }
+
     }
 
     /*
@@ -112,7 +121,7 @@
     }
  
     .sidebar-section {
-        font-size: 0.65rem;
+        font-size: 0.95rem;
         color: #d8f9ff;
         letter-spacing: 0.12em;
         text-transform: uppercase;
@@ -121,24 +130,22 @@
     }
  
     .suggestion-btn {
-        background: #17171c;
-        border: 1px solid #22222a;
-        border-radius: 8px;
-        padding: 0.6rem 0.85rem;
-        color: #8a8a99;
-        font-size: 0.8rem;
-        cursor: pointer;
-        margin-bottom: 0.4rem;
-        width: 100%;
-        text-align: left;
-        transition: all 0.2s;
-        font-family: 'DM Sans', sans-serif;
+        background: black !important;
+        color: #e8e6e1 !important;
+        border: 4px solid #f9cc85 !important;
+        /* border: 2px solid #a3a3bc !important; */
+        /* border: none !important; */
+        border-radius: 10px !important;
+        font-family: 'DM Sans', sans-serif !important;
+        font-weight: 500 !important;
+        font-size: clamp(0.78rem, 2vw, 0.85rem) !important;
+        padding: clamp(0.5rem, 1.5vw, 0.6rem) clamp(1rem, 3vw, 1.5rem) !important;
+        transition: all 0.2s !important;
     }
  
     .suggestion-btn:hover {
-        background: #1d1d24;
-        color: #c8c6c0;
-        border-color: #2e2e3a;
+        border-color: #d8f9ff !important;
+        transform: translateY(-1px) !important;
     }
 
     /* Use existing "button" styling for suggestion links too. */
@@ -165,7 +172,7 @@
     }
 
     .uncertainty-legend {
-        font-size: 0.78rem;
+        font-size: 0.98rem;
         color: #e8e6e1;
         line-height: 1.8;
     }
@@ -232,7 +239,7 @@
     }
  
     .user-bubble {
-        background: #1e2a3a;
+        background: black;
         border: 1px solid #253545;
         border-radius: 18px 18px 4px 18px;
         padding: 0.85rem 1.2rem;
@@ -244,7 +251,7 @@
  
     .assistant-message {
         display: flex;
-        justify-content: flex-start;
+        justify-content: center;
         margin-bottom: 1.25rem;
         gap: 0.85rem;
         align-items: flex-start;
@@ -264,13 +271,13 @@
     }
  
     .assistant-bubble {
-        background: #141418;
+        background: #d8f9ff;
         border: 1px solid #1e1e26;
         border-radius: 4px 18px 18px 18px;
         padding: 0.85rem 1.2rem;
         max-width: min(75%, 100%);
         font-size: 0.9rem;
-        color: #c8c6c0;
+        color: black;
         line-height: 1.7;
     }
  
@@ -466,6 +473,7 @@
     /* Multi-line query field (matches .stTextInput styling) */
     .stTextArea textarea {
         /* all: unset; */
+        box-sizing: border-box;
         background: #e8e6e1 !important;
         border: 5px solid black !important;
         border-radius: 10px !important;
@@ -477,7 +485,8 @@
         overflow-wrap: anywhere;
         word-break: break-word;
         resize: none;
-        min-height: 2.8rem;
+        /* One line baseline; height grows in JS up to 10 lines */
+        min-height: 0;
     }
 
     .stTextArea textarea:focus {
@@ -493,6 +502,8 @@
     [data-testid="stColumn"].stColumn.stColumn.st-emotion-cache-13a87qy.e1rw0b1u2 {
         width: auto;
     }
+
+
  
     /* Button */
     .stButton button {
