@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from pymongo import MongoClient
+import google.generativeai as genai
 
 import os
 from dotenv import load_dotenv
@@ -8,6 +9,9 @@ from dotenv import load_dotenv
 load_dotenv("security.env")
 
 client = MongoClient(os.getenv("MONGODB_URI"))
+# Configure Gemini
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+
 db = client["CIS_360_Project"]
 datasets = db["Datasets"]
 papers = db["Papers"]
@@ -228,43 +232,28 @@ with col_btn:
 st.markdown('<div class="input-hint">Connected to MongoDB · ResearchLens v1.0</div>', unsafe_allow_html=True)
 st.markdown('</div></div>', unsafe_allow_html=True)
  
+
+
 def generate_response(query):
     """
-    Query MongoDB and return results from datasets, methods, and papers collections.
+    Use Google Gemini to build smart MongoDB queries
     """
-    try:
-        results = []
-
-        # 1. Dataset search
-        dataset_hits = list(datasets.find({
-            "$or": [
-                {"data_name": {"$regex": query, "$options": "i"}},
-                {"data_type": {"$regex": query, "$options": "i"}},
-                {"paper_doi": {"$regex": query, "$options": "i"}}
-            ]
-        }).limit(10))
-
-        # 2. Method search
-        method_hits = list(methods.find({
-            "method_name": {"$regex": query, "$options": "i"}
-        }).limit(10))
-
-        # 3. Paper search
-        paper_hits = list(papers.find({
-            "$or": [
-                {"title": {"$regex": query, "$options": "i"}},
-                {"doi": {"$regex": query, "$options": "i"}}
-            ]
-        }).limit(10))
-
+    result = execute_smart_query(query)
+    
+    if result["success"]:
         return {
-            "datasets": dataset_hits,
-            "methods": method_hits,
-            "papers": paper_hits
+            "datasets": result["results"] if result["collection"] == "Datasets" else [],
+            "methods": result["results"] if result["collection"] == "FusionMethods" else [],
+            "papers": result["results"] if result["collection"] == "Papers" else [],
+            "explanation": result["explanation"]
         }
-    except Exception as e:
-        st.error(f"Database error: {str(e)}")
-        return {"datasets": [], "methods": [], "papers": []}
+    else:
+        return {
+            "datasets": [],
+            "methods": [],
+            "papers": [],
+            "error": result.get("error")
+        }
 
 # --- Handle input ---
 if (send or user_input) and user_input.strip():
@@ -273,3 +262,50 @@ if (send or user_input) and user_input.strip():
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.session_state.input_key += 1
     st.rerun()
+
+
+
+
+
+
+
+
+
+
+# def generate_response(query):
+#     """
+#     Query MongoDB and return results from datasets, methods, and papers collections.
+#     """
+#     try:
+#         results = []
+
+#         # 1. Dataset search
+#         dataset_hits = list(datasets.find({
+#             "$or": [
+#                 {"data_name": {"$regex": query, "$options": "i"}},
+#                 {"data_type": {"$regex": query, "$options": "i"}},
+#                 {"paper_doi": {"$regex": query, "$options": "i"}}
+#             ]
+#         }).limit(10))
+
+#         # 2. Method search
+#         method_hits = list(methods.find({
+#             "method_name": {"$regex": query, "$options": "i"}
+#         }).limit(10))
+
+#         # 3. Paper search
+#         paper_hits = list(papers.find({
+#             "$or": [
+#                 {"title": {"$regex": query, "$options": "i"}},
+#                 {"doi": {"$regex": query, "$options": "i"}}
+#             ]
+#         }).limit(10))
+
+#         return {
+#             "datasets": dataset_hits,
+#             "methods": method_hits,
+#             "papers": paper_hits
+#         }
+#     except Exception as e:
+#         st.error(f"Database error: {str(e)}")
+#         return {"datasets": [], "methods": [], "papers": []}
